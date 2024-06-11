@@ -34,7 +34,7 @@ function wordpress_export_to_server( $args = array() ) {
 
 	// Disable "WordPress Importer (v2)" because it hooks into the export
 	// and makes it unusable for the "WordPress Importer" (v1).
-	deactivate_plugins( '/WordPress-Importer-master/plugin.php', true );
+	deactivate_plugins( 'WordPress-Importer-master/plugin.php', true );
 
 	
 	/** Load WordPress export API */
@@ -65,6 +65,14 @@ function wordpress_export_to_server( $args = array() ) {
 			$export_data
 		);
 	}
+
+	// prevent constant updating of existing posts & attachments
+	$export_data = str_replace(
+		// 'https://playground.wordpress.net/scope:0.0718053567460342/',
+		home_url( '/' ),
+		'https://gatherpress.test/',
+		$export_data
+	);
 
 	// Save the export data to a file on the server.
 	$path = get_option( 'wordpress_export_to_server__path', WP_CONTENT_DIR . '/uploads' );
