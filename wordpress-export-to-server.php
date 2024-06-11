@@ -4,6 +4,16 @@ Plugin Name: Save Export to server
 Description: New export behavior to save the export file on the server.
 */
 
+
+/**
+ * Decide whether or not the importer should attempt to download attachment files.
+ * Default is true, can be filtered via import_allow_fetch_attachments. The choice
+ * made at the import options screen must also be true, false here hides that checkbox.
+ *
+ * @return bool True if downloading attachments is allowed
+ */
+add_filter( 'import_allow_fetch_attachments', '__return_false' );
+
 /**
  * Adds a "Export to server" link to the Toolbar.
  *
@@ -34,7 +44,8 @@ function wordpress_export_to_server( $args = array() ) {
 
 	// Disable "WordPress Importer (v2)" because it hooks into the export
 	// and makes it unusable for the "WordPress Importer" (v1).
-	deactivate_plugins( 'WordPress-Importer-master/plugin.php', true );
+	// deactivate_plugins( 'WordPress-Importer-master/plugin.php', true );
+	// 
 	// deactivation seems to be not enough to get rid of that.
 	// remove_all_filters('') // !! would also remove the needed GatherPress Export stuff.
 	remove_action( 'admin_init', 'wpimportv2_init' );
