@@ -31,6 +31,21 @@ function wordpress_export_to_server( $args = array() ) {
 	if ( ! isset( $_GET['wordpress-export-to-server'] ) ) {
 		return;
 	}
+	/**
+	 * Fires after the query variable object is created, but before the actual query is run.
+	 *
+	 * @param \WP_Query $query The WP_Query instance (passed by reference).
+	 */
+	add_action(
+		'pre_get_posts',
+		function ( \WP_Query $query ): void {
+			// Exclude default content from export
+			// "Hello world" post
+			// "Sample page"
+			// "Privacy policy"
+			$query->is_main_query() && $query->set( 'post__not_in', array( 1, 2, 3 ) );
+		} 
+	);
 
 	/** Load WordPress export API */
 	require_once ABSPATH . 'wp-admin/includes/export.php';
