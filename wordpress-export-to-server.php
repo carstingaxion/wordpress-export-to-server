@@ -50,7 +50,7 @@ function wordpress_export_to_server( $args = array() ) {
 	// Save the export data to a file on the server.
 	$path = get_option( 'wordpress_export_to_server__path', WP_CONTENT_DIR . '/uploads' );
 	mkdir( $path );
-	$file_path = $path . get_option( 'wordpress_export_to_server__file', '/export.xml' );
+	$file_path = $path . '/' . get_option( 'wordpress_export_to_server__file', 'export.xml' );
 	file_put_contents( $file_path, $export_data );
 
 	// Redirect to success page.
