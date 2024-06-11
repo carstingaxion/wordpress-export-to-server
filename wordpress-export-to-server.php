@@ -35,8 +35,6 @@ function wordpress_export_to_server( $args = array() ) {
 	/** Load WordPress export API */
 	require_once ABSPATH . 'wp-admin/includes/export.php';
 
-	// global $wpdb, $post;
-
 	$defaults = array(
 		'content' => 'all',
 	);
@@ -83,7 +81,7 @@ function wordpress_export_to_server_admin_notice() {
 		return;
 	}
 	printf(
-		'<div class="notice notice-success"><p>Export saved successfully to %s!</p></div>',
+		'<div class="notice notice-success"><p>Export saved successfully to <code>%s</code>!</p></div>',
 		$_GET['wordpress-export-to-server-success']
 	);
 }
