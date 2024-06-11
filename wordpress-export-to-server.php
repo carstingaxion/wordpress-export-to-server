@@ -47,6 +47,13 @@ function wordpress_export_to_server( $args = array() ) {
 	export_wp( $args );
 	$export_data = ob_get_clean();
 
+	$export_data = str_replace(
+		// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content',
+		WP_CONTENT_URL,
+		'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
+		$export_data
+	);
+
 	// Save the export data to a file on the server.
 	$path = get_option( 'wordpress_export_to_server__path', WP_CONTENT_DIR . '/uploads' );
 	mkdir( $path );
