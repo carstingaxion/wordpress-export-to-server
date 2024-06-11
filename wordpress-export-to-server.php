@@ -71,8 +71,8 @@ function wordpress_export_to_server( $args = array() ) {
 	if ( $export_home ) {
 		$export_data = str_replace(
 			// 'https://playground.wordpress.net/scope:0.0718053567460342/',
-			home_url( '/' ),
-			// 'https://gatherpress.test/',
+			home_url(),
+			// 'https://gatherpress.test', // !! Without trailing slash
 			$export_home,
 			$export_data
 		);
