@@ -25,7 +25,7 @@ add_action( 'admin_bar_menu', 'wordpress_export_to_server_admin_bar_menu', 999 )
 
 
 // Hook into the export_wp function
-add_action( 'admin_init', 'wordpress_export_to_server' );
+add_action( 'admin_init', 'wordpress_export_to_server', 9 );
 
 function wordpress_export_to_server( $args = array() ) {
 	if ( ! isset( $_GET['wordpress-export-to-server'] ) ) {
@@ -35,6 +35,11 @@ function wordpress_export_to_server( $args = array() ) {
 	// Disable "WordPress Importer (v2)" because it hooks into the export
 	// and makes it unusable for the "WordPress Importer" (v1).
 	deactivate_plugins( 'WordPress-Importer-master/plugin.php', true );
+	// deactivation seems to be not enough to get rid of that.
+	// remove_all_filters('') // !! would also remove the needed GatherPress Export stuff.
+	remove_action( 'admin_init', 'wpimportv2_init' );
+
+
 
 	
 	/** Load WordPress export API */
