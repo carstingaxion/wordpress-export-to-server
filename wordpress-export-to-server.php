@@ -32,6 +32,11 @@ function wordpress_export_to_server( $args = array() ) {
 		return;
 	}
 
+	// Disable "WordPress Importer (v2)" because it hooks into the export
+	// and makes it unusable for the "WordPress Importer" (v1).
+	deactivate_plugins( '/WordPress-Importer-master/plugin.php', true );
+
+	
 	/** Load WordPress export API */
 	require_once ABSPATH . 'wp-admin/includes/export.php';
 
