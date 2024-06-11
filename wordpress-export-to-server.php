@@ -72,10 +72,13 @@ function wordpress_export_to_server( $args = array() ) {
 	// to:
 	// 'https://raw.githubusercontent.com/owner/repo/branch'
 	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
+	$repo_branch = explode( '/', $owner_repo_branch );
+	$repo_branch = join('-', array( $repo_branch[1], $repo_branch[2] ) );
 	if ( $owner_repo_branch ) {
 		$export_data = str_replace(
 			// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
-			WP_CONTENT_URL . '/uploads',
+			// WP_CONTENT_URL . '/uploads',
+			WP_CONTENT_URL . '/' . $repo_branch,
 			// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
 			'https://raw.githubusercontent.com/' . $owner_repo_branch,
 			$export_data
@@ -95,7 +98,8 @@ function wordpress_export_to_server( $args = array() ) {
 	}
 
 	// Save the export data to a file on the server.
-	$path = get_option( 'wordpress_export_to_server__path', WP_CONTENT_DIR . '/uploads' );
+	// $path = get_option( 'wordpress_export_to_server__path', WP_CONTENT_DIR . '/uploads' );
+	$path = get_option( 'wordpress_export_to_server__path', WP_CONTENT_DIR . '/' . $repo_branch );
 	mkdir( $path );
 	$file_path = $path . '/' . get_option( 'wordpress_export_to_server__file', 'export.xml' );
 	file_put_contents( $file_path, $export_data );
