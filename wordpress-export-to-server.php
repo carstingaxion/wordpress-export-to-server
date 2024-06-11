@@ -67,12 +67,16 @@ function wordpress_export_to_server( $args = array() ) {
 	}
 
 	// prevent constant updating of existing posts & attachments
-	$export_data = str_replace(
-		// 'https://playground.wordpress.net/scope:0.0718053567460342/',
-		home_url( '/' ),
-		'https://gatherpress.test/',
-		$export_data
-	);
+	$export_home = get_option( 'wordpress_export_to_server__export_home', false );
+	if ( $export_home ) {
+		$export_data = str_replace(
+			// 'https://playground.wordpress.net/scope:0.0718053567460342/',
+			home_url( '/' ),
+			// 'https://gatherpress.test/',
+			$export_home,
+			$export_data
+		);
+	}
 
 	// Save the export data to a file on the server.
 	$path = get_option( 'wordpress_export_to_server__path', WP_CONTENT_DIR . '/uploads' );
