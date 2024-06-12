@@ -56,7 +56,7 @@ function set_upload_folder( $upload_data ) {
 
 function wpse_77960_upload_url() {
 	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
-	return 'https://raw.githubusercontent.com/' . $owner_repo_branch,
+	return 'https://raw.githubusercontent.com/' . $owner_repo_branch;
 }
 
 
