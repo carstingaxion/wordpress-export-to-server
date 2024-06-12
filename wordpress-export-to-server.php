@@ -53,11 +53,11 @@ function set_upload_folder( $upload_data ) {
 	return wp_parse_args( $upload_data, $upload_data );
 } */
 
-
+/* 
 function wpse_77960_upload_url() {
 	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
 	return 'https://raw.githubusercontent.com/' . $owner_repo_branch;
-}
+} */
 
 
 
@@ -77,7 +77,7 @@ function wordpress_export_to_server( $args = array() ) {
 	// remove_all_filters('') // !! would also remove the needed GatherPress Export stuff.
 	remove_action( 'admin_init', 'wpimportv2_init' );
 
-	add_filter( 'pre_option_upload_url_path', 'wpse_77960_upload_url' );
+	// add_filter( 'pre_option_upload_url_path', 'wpse_77960_upload_url' );
 
 
 	
@@ -102,16 +102,17 @@ function wordpress_export_to_server( $args = array() ) {
 	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
 	$repo_branch       = explode( '/', $owner_repo_branch );
 	$repo_branch       = join( '-', array( $repo_branch[1], $repo_branch[2] ) );
-	// if ( $owner_repo_branch ) {
-	// $export_data = str_replace(
-	// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
-	// WP_CONTENT_URL . '/uploads',
-	// WP_CONTENT_URL . '/' . $repo_branch,
-	// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
-	// 'https://raw.githubusercontent.com/' . $owner_repo_branch,
-	// $export_data
-	// );
-	// }
+	if ( $owner_repo_branch ) {
+		$export_data = str_replace(
+			// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
+			// WP_CONTENT_URL . '/uploads',
+			// WP_CONTENT_URL . '/' . $repo_branch,
+			home_url( '/wp-content/' . $repo_branch ),
+			// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
+			'https://raw.githubusercontent.com/' . $owner_repo_branch,
+			$export_data
+		);
+	}
 
 	// prevent constant updating of existing posts & attachments
 	$export_home = get_option( 'wordpress_export_to_server__export_home', false );
