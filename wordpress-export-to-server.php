@@ -99,9 +99,9 @@ function wordpress_export_to_server( $args = array() ) {
 	// // 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads'
 	// // to:
 	// // 'https://raw.githubusercontent.com/owner/repo/branch'
-	// $owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
-	// $repo_branch       = explode( '/', $owner_repo_branch );
-	// $repo_branch       = join( '-', array( $repo_branch[1], $repo_branch[2] ) );
+	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
+	$repo_branch       = explode( '/', $owner_repo_branch );
+	$repo_branch       = join( '-', array( $repo_branch[1], $repo_branch[2] ) );
 	// if ( $owner_repo_branch ) {
 	// $export_data = str_replace(
 	// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
