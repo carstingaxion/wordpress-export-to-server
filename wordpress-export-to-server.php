@@ -12,7 +12,7 @@ Description: New export behavior to save the export file on the server.
  *
  * @return bool True if downloading attachments is allowed
  */
-add_filter( 'import_allow_fetch_attachments', '__return_false' );
+add_filter( 'import_allow_fetch_attachments', '__return_false', 99999 );
 
 /**
  * Adds a "Export to server" link to the Toolbar.
