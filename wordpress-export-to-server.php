@@ -34,6 +34,33 @@ function wordpress_export_to_server_admin_bar_menu( $wp_admin_bar ) {
 add_action( 'admin_bar_menu', 'wordpress_export_to_server_admin_bar_menu', 999 );
 
 
+
+
+/* 
+// add_filter('upload_dir', 'set_upload_folder', 999);
+
+function set_upload_folder( $upload_data ) { 
+	$owner_repo_branch   = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
+	$repo_branch         = explode( '/', $owner_repo_branch );
+	$repo_branch         = join( '-', array( $repo_branch[1], $repo_branch[2] ) );
+	$uploads_replacement = 
+	// absolute dir path, must be writable by WordPress 
+	$upload_data['basedir'] = trailingslashit( ABSPATH ) . '/files';
+	$upload_data['baseurl'] = home_url( '/files' );
+	$subdir                 = $upload_data['subdir'];
+	$upload_data['path']    = $upload_data['basedir'] . $subdir;
+	$upload_data['url']     = $upload_data['baseurl'] . $subdir;
+	return wp_parse_args( $upload_data, $upload_data );
+} */
+
+
+function wpse_77960_upload_url() {
+	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
+	return 'https://raw.githubusercontent.com/' . $owner_repo_branch,
+}
+
+
+
 // Hook into the export_wp function
 add_action( 'admin_init', 'wordpress_export_to_server', 9 );
 
@@ -50,6 +77,7 @@ function wordpress_export_to_server( $args = array() ) {
 	// remove_all_filters('') // !! would also remove the needed GatherPress Export stuff.
 	remove_action( 'admin_init', 'wpimportv2_init' );
 
+	add_filter( 'pre_option_upload_url_path', 'wpse_77960_upload_url' );
 
 
 	
@@ -66,24 +94,24 @@ function wordpress_export_to_server( $args = array() ) {
 	export_wp( $args );
 	$export_data = ob_get_clean();
 
-	// Replace attachment URLs
-	// from:
-	// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads'
-	// to:
-	// 'https://raw.githubusercontent.com/owner/repo/branch'
-	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
-	$repo_branch       = explode( '/', $owner_repo_branch );
-	$repo_branch       = join( '-', array( $repo_branch[1], $repo_branch[2] ) );
-	if ( $owner_repo_branch ) {
-		$export_data = str_replace(
-			// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
-			// WP_CONTENT_URL . '/uploads',
-			WP_CONTENT_URL . '/' . $repo_branch,
-			// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
-			'https://raw.githubusercontent.com/' . $owner_repo_branch,
-			$export_data
-		);
-	}
+	// // Replace attachment URLs
+	// // from:
+	// // 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads'
+	// // to:
+	// // 'https://raw.githubusercontent.com/owner/repo/branch'
+	// $owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
+	// $repo_branch       = explode( '/', $owner_repo_branch );
+	// $repo_branch       = join( '-', array( $repo_branch[1], $repo_branch[2] ) );
+	// if ( $owner_repo_branch ) {
+	// $export_data = str_replace(
+	// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
+	// WP_CONTENT_URL . '/uploads',
+	// WP_CONTENT_URL . '/' . $repo_branch,
+	// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
+	// 'https://raw.githubusercontent.com/' . $owner_repo_branch,
+	// $export_data
+	// );
+	// }
 
 	// prevent constant updating of existing posts & attachments
 	$export_home = get_option( 'wordpress_export_to_server__export_home', false );
