@@ -107,9 +107,10 @@ function wordpress_export_to_server( $args = array() ) {
 			// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
 			// WP_CONTENT_URL . '/uploads',
 			// WP_CONTENT_URL . '/' . $repo_branch,
-			home_url( '/wp-content/' . $repo_branch ),
+			// home_url( '/wp-content/' . $repo_branch ),
+			wp_get_upload_dir()['baseurl']
 			// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
-			'https://raw.githubusercontent.com/' . $owner_repo_branch,
+			'https://raw.githubusercontent.com/' . $owner_repo_branch . '/wp-content/uploads',
 			$export_data
 		);
 	}
