@@ -108,7 +108,7 @@ function wordpress_export_to_server( $args = array() ) {
 			// WP_CONTENT_URL . '/uploads',
 			// WP_CONTENT_URL . '/' . $repo_branch,
 			// home_url( '/wp-content/' . $repo_branch ),
-			wp_get_upload_dir()['baseurl']
+			wp_get_upload_dir()['baseurl'],
 			// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
 			'https://raw.githubusercontent.com/' . $owner_repo_branch . '/wp-content/uploads',
 			$export_data
