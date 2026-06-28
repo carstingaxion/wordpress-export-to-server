@@ -19,39 +19,53 @@ add_filter( 'import_allow_fetch_attachments', '__return_false', 99999 );
 // 1. No remote file downloads (import_allow_fetch_attachments → false, and it's persistent because it's a mu-plugin, not an isolated runPHP filter).
 // 2. The GUID is rewritten to match the local URL, so the importer's duplicate detection has a chance to work if the attachment was already inserted.
 // 3. Even if the importer still inserts the attachment post, wp_unique_filename() won't rename because the importer isn't writing a file (downloads are disabled) — it's only creating the database record._
-add_filter( 'wp_import_post_data_processed', function ( array $postdata, array $post ): array {
-    if ( 'attachment' !== ( $postdata['post_type'] ?? '' ) ) {
-        return $postdata;
-    }
+// add_filter( 'wp_import_post_data_processed', function ( array $postdata, array $post ): array {
+//     if ( 'attachment' !== ( $postdata['post_type'] ?? '' ) ) {
+//         return $postdata;
+//     }
 
-    $attached_file = '';
-    if ( ! empty( $post['postmeta'] ) ) {
-        foreach ( $post['postmeta'] as $meta ) {
-            if ( '_wp_attached_file' === ( $meta['key'] ?? '' ) ) {
-				$attached_file = sanitize_text_field( $meta['value'] ?? '' );
-                break;
-            }
-        }
-    }
+//     $attached_file = '';
+//     if ( ! empty( $post['postmeta'] ) ) {
+//         foreach ( $post['postmeta'] as $meta ) {
+//             if ( '_wp_attached_file' === ( $meta['key'] ?? '' ) ) {
+// 				$attached_file = sanitize_text_field( $meta['value'] ?? '' );
+//                 break;
+//             }
+//         }
+//     }
 
-    if ( ! $attached_file ) {
-        return $postdata;
-    }
+//     if ( ! $attached_file ) {
+//         return $postdata;
+//     }
 
+//     $upload_dir     = wp_get_upload_dir();
+//     $basedir_real   = realpath( $upload_dir['basedir'] );
+//     $full_path      = realpath( $upload_dir['basedir'] . '/' . $attached_file );
+
+//     // Ensure the resolved path exists and stays within the uploads directory.
+//     if ( $full_path && $basedir_real && str_starts_with( $full_path, $basedir_real ) ) {
+//         if (file_exists($full_path)) {
+//             // Set the GUID to match what WordPress will generate,
+//             // so the duplicate check passes.
+//             $postdata['guid'] = esc_url_raw( $upload_dir['baseurl'] . '/' . $attached_file );
+//         }
+//     }
+
+//     return $postdata;
+// }, 10, 2 );
+
+add_filter( 'pre_wp_unique_filename_file_list', function ( array|null $files, string $dir, string $filename ) {
     $upload_dir     = wp_get_upload_dir();
     $basedir_real   = realpath( $upload_dir['basedir'] );
-    $full_path      = realpath( $upload_dir['basedir'] . '/' . $attached_file );
+    $full_path      = realpath( $upload_dir['basedir'] . '/' . dir . $filename );
 
     // Ensure the resolved path exists and stays within the uploads directory.
     if ( $full_path && $basedir_real && str_starts_with( $full_path, $basedir_real ) ) {
         if (file_exists($full_path)) {
-            // Set the GUID to match what WordPress will generate,
-            // so the duplicate check passes.
-            $postdata['guid'] = esc_url_raw( $upload_dir['baseurl'] . '/' . $attached_file );
+            return array($full_path . 'skip-the-filename-check-with-this-hack');
         }
     }
-
-    return $postdata;
+	return $files;
 }, 10, 2 );
 
 /**
