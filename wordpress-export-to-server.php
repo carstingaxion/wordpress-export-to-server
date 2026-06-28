@@ -14,6 +14,40 @@ Description: New export behavior to save the export file on the server.
  */
 add_filter( 'import_allow_fetch_attachments', '__return_false', 99999 );
 
+
+// Using wp_import_post_data_processed ensures:
+// 1. No remote file downloads (import_allow_fetch_attachments → false, and it's persistent because it's a mu-plugin, not an isolated runPHP filter).
+// 2. The GUID is rewritten to match the local URL, so the importer's duplicate detection has a chance to work if the attachment was already inserted.
+// 3. Even if the importer still inserts the attachment post, wp_unique_filename() won't rename because the importer isn't writing a file (downloads are disabled) — it's only creating the database record._
+add_filter('wp_import_post_data_processed', function(array $postdata, array $post): array {
+    if ('attachment' !== ($postdata['post_type'] ?? '')) {
+        return $postdata;
+    }
+    
+    // Check if file already exists on disk via _wp_attached_file meta.
+    $attached_file = '';
+    if (!empty($post['postmeta'])) {
+        foreach ($post['postmeta'] as $meta) {
+            if ('_wp_attached_file' === ($meta['key'] ?? '')) {
+                $attached_file = $meta['value'] ?? '';
+                break;
+            }
+        }
+    }
+    
+    if ($attached_file) {
+        $full_path  = $upload_dir['basedir'] . '/' . $attached_file;
+        if (file_exists($full_path)) {
+            // Set the GUID to match what WordPress will generate,
+            // so the duplicate check passes.
+            $postdata['guid'] = $upload_dir['baseurl'] . '/' . $attached_file;
+        }
+    }
+    
+    return $postdata;
+}, 10, 2);
+
+
 /**
  * Adds a "Export to server" link to the Toolbar.
  *
