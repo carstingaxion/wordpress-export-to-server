@@ -62,7 +62,8 @@ add_filter( 'pre_wp_unique_filename_file_list', function ( array|null $files, st
     // Ensure the resolved path exists and stays within the uploads directory.
     if ( $full_path && $basedir_real && str_starts_with( $full_path, $basedir_real ) ) {
         if (file_exists($full_path)) {
-            return array($basedir_real . '/skip-the-filename-check-with-this-hack.file');
+            // return array($basedir_real . '/skip-the-filename-check-with-this-hack.file');
+			return array();
         }
     }
 	return $files;
