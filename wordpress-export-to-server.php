@@ -66,7 +66,7 @@ add_filter( 'pre_wp_unique_filename_file_list', function ( array|null $files, st
         }
     }
 	return $files;
-}, 10, 2 );
+}, 10, 3 );
 
 /**
  * Adds a "Export to server" link to the Toolbar.
