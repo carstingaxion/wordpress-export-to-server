@@ -57,7 +57,7 @@ add_filter( 'import_allow_fetch_attachments', '__return_false', 99999 );
 add_filter( 'pre_wp_unique_filename_file_list', function ( array|null $files, string $dir, string $filename ) {
     $upload_dir     = wp_get_upload_dir();
     $basedir_real   = realpath( $upload_dir['basedir'] );
-    $full_path      = realpath( $upload_dir['basedir'] . '/' . dir . $filename );
+    $full_path      = realpath( $upload_dir['basedir'] . '/' . $dir . $filename );
 
     // Ensure the resolved path exists and stays within the uploads directory.
     if ( $full_path && $basedir_real && str_starts_with( $full_path, $basedir_real ) ) {
