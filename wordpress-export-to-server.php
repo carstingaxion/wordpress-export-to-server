@@ -102,6 +102,7 @@ function wordpress_export_to_server( $args = array() ) {
 	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
 	$repo_branch       = explode( '/', $owner_repo_branch );
 	$repo_branch       = join( '-', array( $repo_branch[1], $repo_branch[2] ) );
+	$export_path       = get_option( 'wordpress_export_to_server__export_path', '/wp-content/uploads' );
 	if ( $owner_repo_branch ) {
 		$export_data = str_replace(
 			// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
@@ -110,7 +111,7 @@ function wordpress_export_to_server( $args = array() ) {
 			// home_url( '/wp-content/' . $repo_branch ),
 			wp_get_upload_dir()['baseurl'],
 			// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
-			'https://raw.githubusercontent.com/' . $owner_repo_branch . '/wp-content/uploads',
+			'https://raw.githubusercontent.com/' . $owner_repo_branch . $export_path,
 			$export_data
 		);
 	}
