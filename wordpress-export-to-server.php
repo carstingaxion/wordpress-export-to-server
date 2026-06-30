@@ -4,122 +4,74 @@ Plugin Name: Save Export to server
 Description: New export behavior to save the export file on the server.
 */
 
-
-/**
- * Decide whether or not the importer should attempt to download attachment files.
- * Default is true, can be filtered via import_allow_fetch_attachments. The choice
- * made at the import options screen must also be true, false here hides that checkbox.
- *
- * @return bool True if downloading attachments is allowed
- */
-// add_filter( 'import_allow_fetch_attachments', '__return_false', 99999 );
-
-
-// Using wp_import_post_data_processed ensures:
-// 1. No remote file downloads (import_allow_fetch_attachments → false, and it's persistent because it's a mu-plugin, not an isolated runPHP filter).
-// 2. The GUID is rewritten to match the local URL, so the importer's duplicate detection has a chance to work if the attachment was already inserted.
-// 3. Even if the importer still inserts the attachment post, wp_unique_filename() won't rename because the importer isn't writing a file (downloads are disabled) — it's only creating the database record._
-// add_filter( 'wp_import_post_data_processed', function ( array $postdata, array $post ): array {
-//     if ( 'attachment' !== ( $postdata['post_type'] ?? '' ) ) {
-//         return $postdata;
-//     }
-
-//     $attached_file = '';
-//     if ( ! empty( $post['postmeta'] ) ) {
-//         foreach ( $post['postmeta'] as $meta ) {
-//             if ( '_wp_attached_file' === ( $meta['key'] ?? '' ) ) {
-// 				$attached_file = sanitize_text_field( $meta['value'] ?? '' );
-//                 break;
-//             }
-//         }
-//     }
-
-//     if ( ! $attached_file ) {
-//         return $postdata;
-//     }
-
-//     $upload_dir     = wp_get_upload_dir();
-//     $basedir_real   = realpath( $upload_dir['basedir'] );
-//     $full_path      = realpath( $upload_dir['basedir'] . '/' . $attached_file );
-
-//     // Ensure the resolved path exists and stays within the uploads directory.
-//     if ( $full_path && $basedir_real && str_starts_with( $full_path, $basedir_real ) ) {
-//         if (file_exists($full_path)) {
-//             // Set the GUID to match what WordPress will generate,
-//             // so the duplicate check passes.
-//             $postdata['guid'] = esc_url_raw( $upload_dir['baseurl'] . '/' . $attached_file );
-//         }
-//     }
-
-//     return $postdata;
-// }, 10, 2 );
-
-// add_filter( 'pre_wp_unique_filename_file_list', function ( array|null $files, string $dir, string $filename ) {
-//     $upload_dir     = wp_get_upload_dir();
-//     $basedir_real   = realpath( $upload_dir['basedir'] );
-//     $full_path      = realpath( $upload_dir['basedir'] . '/' . $dir . $filename );
-
-//     // Ensure the resolved path exists and stays within the uploads directory.
-//     if ( $full_path && $basedir_real && str_starts_with( $full_path, $basedir_real ) ) {
-//         if (file_exists($full_path)) {
-//             // return array($basedir_real . '/skip-the-filename-check-with-this-hack.file');
-// 			return array();
-//         }
-//     }
-// 	return $files;
-// }, 10, 3 );
-
-/**
- * Adds a "Export to server" link to the Toolbar.
- *
- * @param WP_Admin_Bar $wp_admin_bar Toolbar instance.
- * @see   https://developer.wordpress.org/reference/classes/wp_admin_bar/add_node/
- */
-function wordpress_export_to_server_admin_bar_menu( $wp_admin_bar ) {
-	$args = array(
-		'id'    => 'wordpress_export_to_server',
-		'title' => __( ' 💾 Save Export to server 🤖 ', 'wordpress-export-to-server' ),
-		'href'  => admin_url( 'export.php?wordpress-export-to-server=1' ),
-		'meta'  => array(
-			'class' => 'wordpress-export-to-server',
-		),
-	);
-	$wp_admin_bar->add_node( $args );
-}
-add_action( 'admin_bar_menu', 'wordpress_export_to_server_admin_bar_menu', 999 );
-
-
-
-
-/* 
-// add_filter('upload_dir', 'set_upload_folder', 999);
-
-function set_upload_folder( $upload_data ) { 
-	$owner_repo_branch   = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
-	$repo_branch         = explode( '/', $owner_repo_branch );
-	$repo_branch         = join( '-', array( $repo_branch[1], $repo_branch[2] ) );
-	$uploads_replacement = 
-	// absolute dir path, must be writable by WordPress 
-	$upload_data['basedir'] = trailingslashit( ABSPATH ) . '/files';
-	$upload_data['baseurl'] = home_url( '/files' );
-	$subdir                 = $upload_data['subdir'];
-	$upload_data['path']    = $upload_data['basedir'] . $subdir;
-	$upload_data['url']     = $upload_data['baseurl'] . $subdir;
-	return wp_parse_args( $upload_data, $upload_data );
-} */
-
-/* 
-function wpse_77960_upload_url() {
-	$owner_repo_branch = get_option( 'wordpress_export_to_server__owner_repo_branch', false );
-	return 'https://raw.githubusercontent.com/' . $owner_repo_branch;
-} */
-
-
-
-// Hook into the export_wp function
 add_action( 'admin_init', 'wordpress_export_to_server', 9 );
+add_action( 'admin_bar_menu', 'wordpress_export_to_server_admin_bar_menu', 999 );
+add_action( 'admin_notices', 'wordpress_export_to_server_admin_notice' );
 
-function wordpress_export_to_server( $args = array() ) {
+/**
+ * Configuration via `wp_options` (not filters).
+ *
+ * This plugin is designed to run inside WordPress Playground, where the
+ * environment is bootstrapped from a declarative JSON blueprint. Playground's
+ * `setSiteOptions` step can set option values *before any PHP code runs* —
+ * there is no equivalent mechanism for filters.
+ *
+ * Filters require a PHP file to be loaded and to call `add_filter()` at
+ * runtime. In Playground, that would mean either:
+ *   1. An additional `writeFile` + `runPHP` step to create a file that
+ *      registers filters — adding fragile ordering dependencies, or
+ *   2. Hardcoding values in the plugin itself — defeating the purpose of
+ *      per-blueprint configuration.
+ *
+ * Options solve both problems: they are set atomically in the blueprint,
+ * available immediately via `get_option()`, and survive Playground restarts
+ * within the same session.
+ *
+ * Option keys:
+ * @see 'wordpress_export_to_server__file'              — Export filename (e.g. 'export.xml').
+ * @see 'wordpress_export_to_server__path'              — Absolute server path to save directory.
+ * @see 'wordpress_export_to_server__owner_repo_branch' — GitHub 'owner/repo/branch' for URL rewriting.
+ * @see 'wordpress_export_to_server__export_home'       — Replacement home URL for portability.
+ * @see 'wordpress_export_to_server__export_path'       — Appended to the raw GitHub URL.
+ */
+
+/**
+ * Intercepts the export page request and writes a WXR export file
+ * directly to the Playground server's filesystem.
+ *
+ * This function is hooked early on `admin_init` (priority 9) so it runs
+ * before WordPress's built-in export handler. It checks for the
+ * `wordpress-export-to-server` query parameter, generates the WXR XML
+ * via `export_wp()`, applies URL replacements configured through options,
+ * writes the result to disk, and redirects.
+ *
+ * Configuration is read from wp_options rather than apply_filters() intentionally.
+ *
+ * In a WordPress Playground context, options can be set declaratively in a
+ * blueprint.json via the `setSiteOptions` step *before* any PHP executes.
+ * Filters would require a separate PHP file to be loaded first (another
+ * mu-plugin or a `runPHP` step), adding unnecessary complexity and ordering
+ * dependencies to the blueprint. Options make the configuration self-contained
+ * within the blueprint JSON.
+ *
+ * Available options:
+ *   - wordpress_export_to_server__file              (string) Export filename.
+ *   - wordpress_export_to_server__path              (string) Absolute server path for the export.
+ *   - wordpress_export_to_server__owner_repo_branch (string) GitHub owner/repo/branch for URL rewriting.
+ *   - wordpress_export_to_server__export_home       (string) Replacement home URL for portability.
+ *   - wordpress_export_to_server__export_path       (string) Path appended to the raw GitHub URL.
+ *
+ * @since 0.1.0
+ *
+ * @param array{content?: string} $args Optional. Export arguments passed to `export_wp()`.
+ *                                      Defaults to `['content' => 'all']`.
+ * @return void Function returns early if the query parameter is absent.
+ *              Otherwise it redirects and calls `exit` (never returns).
+ *
+ * @see export_wp() For the core export function this wraps.
+ * @see https://developer.wordpress.org/reference/functions/export_wp/
+ */
+function wordpress_export_to_server( array $args = array() ): void {
 	if ( ! isset( $_GET['wordpress-export-to-server'] ) ) {
 		return;
 	}
@@ -129,10 +81,7 @@ function wordpress_export_to_server( $args = array() ) {
 	// deactivate_plugins( 'WordPress-Importer-master/plugin.php', true );
 	// 
 	// deactivation seems to be not enough to get rid of that.
-	// remove_all_filters('') // !! would also remove the needed GatherPress Export stuff.
 	remove_action( 'admin_init', 'wpimportv2_init' );
-
-	// add_filter( 'pre_option_upload_url_path', 'wpse_77960_upload_url' );
 
 
 	
@@ -161,9 +110,6 @@ function wordpress_export_to_server( $args = array() ) {
 	if ( $owner_repo_branch ) {
 		$export_data = str_replace(
 			// 'https://playground.wordpress.net/scope:0.0718053567460342/wp-content/uploads',
-			// WP_CONTENT_URL . '/uploads',
-			// WP_CONTENT_URL . '/' . $repo_branch,
-			// home_url( '/wp-content/' . $repo_branch ),
 			wp_get_upload_dir()['baseurl'],
 			// 'https://raw.githubusercontent.com/carstingaxion/gatherpress-demo-data/save-export-to-server',
 			'https://raw.githubusercontent.com/' . $owner_repo_branch . $export_path,
@@ -196,9 +142,24 @@ function wordpress_export_to_server( $args = array() ) {
 }
 
 
+/**
+ * Adds a "Export to server" link to the Toolbar.
+ *
+ * @param WP_Admin_Bar $wp_admin_bar Toolbar instance.
+ * @see   https://developer.wordpress.org/reference/classes/wp_admin_bar/add_node/
+ */
+function wordpress_export_to_server_admin_bar_menu( $wp_admin_bar ) {
+	$args = array(
+		'id'    => 'wordpress_export_to_server',
+		'title' => __( ' 💾 Save Export to server 🤖 ', 'wordpress-export-to-server' ),
+		'href'  => admin_url( 'export.php?wordpress-export-to-server=1' ),
+		'meta'  => array(
+			'class' => 'wordpress-export-to-server',
+		),
+	);
+	$wp_admin_bar->add_node( $args );
+}
 
-
-add_action( 'admin_notices', 'wordpress_export_to_server_admin_notice' );
 function wordpress_export_to_server_admin_notice() {
 	if ( ! isset( $_GET['wordpress-export-to-server-success'] ) || ! file_exists( rawurldecode( $_GET['wordpress-export-to-server-success'] ) ) ) {
 		return;
