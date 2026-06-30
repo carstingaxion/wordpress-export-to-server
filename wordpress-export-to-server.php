@@ -63,15 +63,13 @@ add_action( 'admin_notices', 'wordpress_export_to_server_admin_notice' );
  *
  * @since 0.1.0
  *
- * @param array{content?: string} $args Optional. Export arguments passed to `export_wp()`.
- *                                      Defaults to `['content' => 'all']`.
- * @return void Function returns early if the query parameter is absent.
- *              Otherwise it redirects and calls `exit` (never returns).
- *
  * @see export_wp() For the core export function this wraps.
  * @see https://developer.wordpress.org/reference/functions/export_wp/
+ *
+ * @return void Function returns early if the query parameter is absent.
+ *              Otherwise it redirects and calls `exit` (never returns).
  */
-function wordpress_export_to_server( array $args = array() ): void {
+function wordpress_export_to_server(): void {
 	if ( ! isset( $_GET['wordpress-export-to-server'] ) ) {
 		return;
 	}
@@ -82,12 +80,12 @@ function wordpress_export_to_server( array $args = array() ): void {
 	// 
 	// deactivation seems to be not enough to get rid of that.
 	remove_action( 'admin_init', 'wpimportv2_init' );
-
-
 	
 	/** Load WordPress export API */
 	require_once ABSPATH . 'wp-admin/includes/export.php';
 
+	// could be provided via option or filter
+	$args     = array();
 	$defaults = array(
 		'content' => 'all',
 	);
@@ -140,7 +138,6 @@ function wordpress_export_to_server( array $args = array() ): void {
 	wp_redirect( admin_url( 'export.php?wordpress-export-to-server-success=' . rawurlencode( $file_path ) ) );
 	exit;
 }
-
 
 /**
  * Adds a "Export to server" link to the Toolbar.
